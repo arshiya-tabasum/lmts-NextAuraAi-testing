@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block title %}AI Appliance Doctor Diagnostics & Booking — NextAura AI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  
+  <!-- Wizard Steps Header Indicator -->
+  <div class="row justify-content-center mb-4">
+    <div class="col-lg-10">
+      <div class="wizard-steps">
+        <div class="step-node active" data-step="1" onclick="goToStep(1)">
+          <div class="step-circle">1</div>
+          <div class="step-label">1. Describe</div>
+        </div>
+        <div class="step-node" data-step="2" onclick="if(currentDiagnosis) goToStep(2)">
+          <div class="step-circle">2</div>
+          <div class="step-label">2. Understand</div>
+        </div>
+        <div class="step-node" data-step="3" onclick="if(currentDiagnosis) goToStep(3)">
+          <div class="step-circle">3</div>
+          <div class="step-label">3. Estimate</div>
+        </div>
+        <div class="step-node" data-step="4" onclick="if(currentDiagnosis) goToStep(4)">
+          <div class="step-circle">4</div>
+          <div class="step-label">4. Match</div>
+        </div>
+        <div class="step-node" data-step="5" onclick="if(currentDiagnosis) goToStep(5)">
+          <div class="step-circle">5</div>
+          <div class="step-label">5. Schedule</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+
+      <!-- STEP 1: DESCRIBE (INPUT FORM) -->
+      <div id="stepSection1" class="wizard-step-section">
+        <div class="card aura-card p-4 p-md-5">
+          <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+            <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-circle fs-3">
+              <i class="bi bi-robot"></i>
+            </div>
+            <div>
+              <h3 class="fw-bold mb-1">Step 1: Describe Your Appliance Issue</h3>
+              <p class="text-secondary small mb-0">Our AI Appliance Doctor analyzes symptoms safely before any technician dispatch.</p>
+            </div>
+          </div>
+
+          <form id="aiDoctorForm">
+            <!-- Appliance Type Selection -->
+            <label class="form-label fw-bold text-dark">Select Target Appliance:</label>
+            <div class="row g-3 mb-4">
+              <div class="col-md-4">
+                <div class="card p-3 text-center appliance-select-card border-primary bg-primary bg-opacity-10" data-appliance="Air Conditioners" style="cursor: pointer;">
+                  <i class="bi bi-snow fs-1 text-primary mb-2"></i>
+                  <h6 class="fw-bold mb-1">Air Conditioner</h6>
+                  <span class="small text-muted">Split, Window, Inverter</span>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card p-3 text-center appliance-select-card" data-appliance="Refrigerators" style="cursor: pointer;">
+                  <i class="bi bi-box-seam fs-1 text-info mb-2"></i>
+                  <h6 class="fw-bold mb-1">Refrigerator</h6>
+                  <span class="small text-muted">Single/Double Door, Frost Free</span>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card p-3 text-center appliance-select-card" data-appliance="Washing Machines" style="cursor: pointer;">
+                  <i class="bi bi-arrow-repeat fs-1 text-success mb-2"></i>
+                  <h6 class="fw-bold mb-1">Washing Machine</h6>
+                  <span class="small text-muted">Front Load, Top Load, Semi</span>
+                </div>
+              </div>
+            </div>
+            <input type="hidden" id="selectedApplianceInput" value="Air Conditioners">
+
+            <!-- Brand and Model -->
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Brand & Model Details</label>
+                <input type="text" id="brandModelInput" class="form-control" placeholder="e.g. Voltas 1.5 Ton Inverter / LG 7kg Front Load" value="Voltas 1.5 Ton Split">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Error Code on Display (Optional)</label>
+                <input type="text" id="errorCodeInput" class="form-control" placeholder="e.g. E1, E4, OE, IE or Leave blank">
+              </div>
+            </div>
+
+            <!-- Quick Suggestions -->
+            <div class="mb-3">
+              <label class="form-label small fw-bold text-secondary">Quick Symptom Prompts:</label>
+              <div id="quickSymptomsContainer" class="d-flex flex-wrap gap-1">
+                <!-- Populated dynamically via JS -->
+              </div>
+            </div>
+
+            <!-- Symptoms Textarea -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Describe the Symptoms Observed:</label>
+              <textarea id="symptomsTextarea" class="form-control" rows="3" placeholder="Tell us what is happening: e.g. Blowing room-temperature air, loud buzzing sound from outdoor unit, tripping power after 2 minutes..." required>AC is running but blowing room-temperature air, outdoor condenser unit makes buzzing sound every 2 minutes.</textarea>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="small text-muted"><i class="bi bi-lock-fill"></i> Data processed under strict safety guidelines.</span>
+              <button type="submit" id="runDiagnosisBtn" class="btn btn-primary px-4 py-2 fw-semibold">
+                <span id="diagnosisSpinner" class="spinner-border spinner-border-sm me-2 d-none" role="status"></span>
+                <i class="bi bi-magic me-1"></i> Run AI Appliance Doctor
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- STEP 2: UNDERSTAND (AI DOCTOR RESULTS & SAFE CHECKS) -->
+      <div id="stepSection2" class="wizard-step-section d-none">
+        <div class="card aura-card p-4 p-md-5">
+          <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+            <div class="d-flex align-items-center gap-3">
+              <div class="p-3 bg-success bg-opacity-10 text-success rounded-circle fs-3">
+                <i class="bi bi-clipboard2-pulse"></i>
+              </div>
+              <div>
+                <h3 class="fw-bold mb-1">Step 2: AI Doctor Diagnosis & Safe Checks</h3>
+                <span class="badge bg-primary">AI Appliance Doctor System Response</span>
+              </div>
+            </div>
+            <button class="btn btn-outline-secondary btn-sm" onclick="goToStep(1)">
+              <i class="bi bi-pencil"></i> Edit Symptoms
+            </button>
+          </div>
+
+          <!-- Symptom Restatement -->
+          <div class="mb-4">
+            <h6 class="fw-bold text-secondary small text-uppercase mb-2">Restated Symptom Summary:</h6>
+            <div class="p-3 bg-light rounded-3 fw-medium text-dark border-start border-4 border-primary" id="diagSymptomSummary">
+              Loading AI summary...
+            </div>
+          </div>
+
+          <!-- Safe Preliminary Checks -->
+          <div class="mb-4">
+            <h6 class="fw-bold text-success small text-uppercase mb-2"><i class="bi bi-check-circle-fill me-1"></i> Safe Preliminary Checks You Can Try Safely:</h6>
+            <div id="diagSafeChecksList">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Safety & Escalation Rules Warning -->
+          <div class="mb-4">
+            <h6 class="fw-bold text-danger small text-uppercase mb-2"><i class="bi bi-exclamation-triangle-fill me-1"></i> Safety & Escalation Rules Enforced:</h6>
+            <div class="escalation-box" id="diagSafetyWarning">
+              Loading safety notice...
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+            <button class="btn btn-outline-secondary" onclick="goToStep(1)">Back</button>
+            <button class="btn btn-primary px-4" onclick="goToStep(3)">
+              View Indicative Cost Estimates <i class="bi bi-arrow-right ms-1"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: ESTIMATE (INDICATIVE COST TRANSPARENCY) -->
+      <div id="stepSection3" class="wizard-step-section d-none">
+        <div class="card aura-card p-4 p-md-5">
+          <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+            <div class="p-3 bg-info bg-opacity-10 text-info rounded-circle fs-3">
+              <i class="bi bi-cash-stack"></i>
+            </div>
+            <div>
+              <h3 class="fw-bold mb-1">Step 3: Transparent Indicative Cost Estimate</h3>
+              <p class="text-secondary small mb-0">No surprise bills. Here are typical market labor & parts ranges before inspection.</p>
+            </div>
+          </div>
+
+          <div class="cost-range-box mb-4">
+            <div class="row align-items-center text-center text-md-start">
+              <div class="col-md-5 border-end-md">
+                <span class="text-muted small fw-semibold text-uppercase">Indicative Total Budget Range</span>
+                <div class="display-6 fw-bold text-primary my-1">
+                  <span id="costRangeMin">₹0</span> — <span id="costRangeMax">₹0</span>
+                </div>
+                <div class="badge bg-success bg-opacity-10 text-success">Parts + Labor Included</div>
+              </div>
+              <div class="col-md-7 mt-3 mt-md-0 ps-md-4">
+                <div class="mb-2">
+                  <strong class="text-dark small">Estimated Labor & Service:</strong>
+                  <div class="text-secondary small" id="costLaborBreakdown">Loading...</div>
+                </div>
+                <div>
+                  <strong class="text-dark small">Potential Spare Parts:</strong>
+                  <div class="text-secondary small" id="costPartsBreakdown">Loading...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card bg-light border-0 p-3 mb-4 rounded-3">
+            <h6 class="fw-bold mb-1 text-dark small"><i class="bi bi-info-circle text-primary me-1"></i> Estimation Assumptions & Rules:</h6>
+            <p class="text-secondary small mb-0" id="costAssumptions">
+              Loading assumptions...
+            </p>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+            <button class="btn btn-outline-secondary" onclick="goToStep(2)">Back to Checks</button>
+            <button class="btn btn-primary px-4" onclick="goToStep(4)">
+              Match Verified Technicians <i class="bi bi-arrow-right ms-1"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 4: MATCH & SCHEDULE (MAP & SELECTION) -->
+      <div id="stepSection4" class="wizard-step-section d-none">
+        <div class="card aura-card p-4 p-md-5">
+          <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+            <div class="p-3 bg-primary bg-opacity-10 text-primary rounded-circle fs-3">
+              <i class="bi bi-geo-alt"></i>
+            </div>
+            <div>
+              <h3 class="fw-bold mb-1">Step 4: Match Verified Local Specialist</h3>
+              <p class="text-secondary small mb-0">Select a background-verified technician near your locality in Bengaluru.</p>
+            </div>
+          </div>
+
+          <!-- Interactive Leaflet Map -->
+          <div class="mb-4">
+            <label class="form-label fw-bold text-dark small"><i class="bi bi-pin-map-fill text-danger me-1"></i> Technician Service Radius & Locations:</label>
+            <div id="mapContainer"></div>
+          </div>
+
+          <!-- Technician Cards Grid -->
+          <div class="row g-3 mb-4">
+            {% for t in technicians %}
+            <div class="col-md-4">
+              <div class="card p-3 border tech-card-item h-100" 
+                   data-id="{{ t.id }}" 
+                   data-name="{{ t.full_name }}" 
+                   data-lat="{{ t.latitude }}" 
+                   data-lng="{{ t.longitude }}"
+                   data-locality="{{ t.locality }}"
+                   data-fee="{{ '%.0f'|format(t.base_inspection_fee) }}"
+                   onclick="selectTechnician('{{ t.id }}', '{{ t.full_name }}', '{{ '%.0f'|format(t.base_inspection_fee) }}')"
+                   style="cursor: pointer; border-radius: 12px;">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <h6 class="fw-bold mb-0 text-dark">{{ t.full_name }}</h6>
+                  <span class="badge bg-success bg-opacity-10 text-success small">★ {{ t.rating }}</span>
+                </div>
+                <div class="text-muted small mb-2"><i class="bi bi-geo-alt text-danger"></i> {{ t.locality }}</div>
+                <div class="small text-secondary mb-3">{{ t.experience_years }}+ yrs exp • {{ t.jobs_completed }} jobs</div>
+                <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
+                  <span class="small text-muted">Inspection:</span>
+                  <span class="fw-bold text-primary">₹{{ "%.0f"|format(t.base_inspection_fee) }}</span>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+
+          <div id="selectedTechBadge" class="alert alert-success d-none mb-4 py-2"></div>
+
+          <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+            <button class="btn btn-outline-secondary" onclick="goToStep(3)">Back to Estimate</button>
+            <button id="proceedToBookingBtn" class="btn btn-primary px-4" disabled onclick="goToStep(5)">
+              Choose Date & Time <i class="bi bi-arrow-right ms-1"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 5: SCHEDULE & CONFIRM (FINAL BOOKING FORM) -->
+      <div id="stepSection5" class="wizard-step-section d-none">
+        <div class="card aura-card p-4 p-md-5">
+          <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+            <div class="p-3 bg-success bg-opacity-10 text-success rounded-circle fs-3">
+              <i class="bi bi-calendar-check"></i>
+            </div>
+            <div>
+              <h3 class="fw-bold mb-1">Step 5: Schedule On-Site Inspection</h3>
+              <p class="text-secondary small mb-0">Technician will arrive, inspect the unit, and provide your formal quotation before work begins.</p>
+            </div>
+          </div>
+
+          <form action="{{ url_for('api_book_repair') }}" method="POST">
+            <!-- Hidden inputs carried forward from diagnostic -->
+            <input type="hidden" name="appliance_type" id="bookingApplianceType" value="Air Conditioners">
+            <input type="hidden" name="brand_model" id="bookingBrandModel" value="Standard Model">
+            <input type="hidden" name="symptoms" id="bookingSymptoms" value="Issue reported">
+            <input type="hidden" name="diagnostic_log_id" id="bookingDiagId" value="">
+            <input type="hidden" name="technician_id" id="selectedTechnicianId" value="1">
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Preferred Service Date</label>
+                <input type="date" name="preferred_date" class="form-control" value="2026-10-30" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Preferred Time Slot</label>
+                <select name="time_slot" class="form-select">
+                  <option value="09:00 AM - 11:00 AM">Morning (09:00 AM - 11:00 AM)</option>
+                  <option value="11:00 AM - 01:00 PM">Mid-Day (11:00 AM - 01:00 PM)</option>
+                  <option value="02:00 PM - 04:00 PM" selected>Afternoon (02:00 PM - 04:00 PM)</option>
+                  <option value="04:00 PM - 06:00 PM">Evening (04:00 PM - 06:00 PM)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-md-8">
+                <label class="form-label fw-semibold">Service Address</label>
+                <input type="text" name="service_address" class="form-control" placeholder="House/Flat No, Street, Landmark" value="Flat 402, Sunshine Apts, 12th Main, Indiranagar" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Locality / Sector</label>
+                <select name="locality" class="form-select">
+                  <option value="Indiranagar" selected>Indiranagar</option>
+                  <option value="Koramangala">Koramangala</option>
+                  <option value="HSR Layout">HSR Layout</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="p-3 bg-light rounded-3 mb-4 small border">
+              <h6 class="fw-bold mb-1 text-dark"><i class="bi bi-shield-check text-success me-1"></i> NextAura 100% Quote Approval Rule:</h6>
+              <span class="text-secondary">
+                You will <strong>NOT</strong> be charged for any repair until the technician conducts physical diagnostics and you explicitly review and click <strong>"Approve Quote"</strong> on your dashboard.
+              </span>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+              <button type="button" class="btn btn-outline-secondary" onclick="goToStep(4)">Back to Technician</button>
+              <button type="submit" class="btn btn-success px-5 py-2 fw-bold">
+                <i class="bi bi-check2-circle me-1"></i> Confirm Booking Request
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts_extra %}
+<script src="{{ url_for('static', filename='js/ai_doctor.js') }}"></script>
+<script>
+  // Trigger initial populate for the default appliance
+  populateQuickSymptoms("Air Conditioners");
+</script>
+{% endblock %}

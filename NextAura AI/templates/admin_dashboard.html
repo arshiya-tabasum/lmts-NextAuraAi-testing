@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Operations & Dispatch — NextAura AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- Header -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom">
+    <div>
+      <span class="badge bg-danger bg-opacity-10 text-danger fw-semibold mb-1">Administrative Center</span>
+      <h2 class="fw-bold mb-0 text-dark">Platform Operations & Quality Control</h2>
+      <p class="text-secondary small mb-0">Technician verification, dispatch management, dispute resolution, and platform metrics.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <span class="badge bg-success py-2 px-3 d-flex align-items-center gap-1">
+        <i class="bi bi-circle-fill fs-6" style="font-size: 8px !important;"></i> Engine Status: Healthy
+      </span>
+    </div>
+  </div>
+
+  <!-- Key Operational Metrics -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+      <div class="card aura-card p-3 border-start border-4 border-primary">
+        <span class="text-muted small fw-semibold">Gross Platform GMV</span>
+        <h3 class="fw-bold text-dark my-1">₹{{ "%.0f"|format(platform_gmv) }}</h3>
+        <span class="text-success small"><i class="bi bi-graph-up-arrow"></i> Authorized Quotations</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="card aura-card p-3 border-start border-4 border-info">
+        <span class="text-muted small fw-semibold">Total Service Requests</span>
+        <h3 class="fw-bold text-dark my-1">{{ total_bookings }}</h3>
+        <span class="text-muted small">All categories</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="card aura-card p-3 border-start border-4 border-success">
+        <span class="text-muted small fw-semibold">Verified Specialists</span>
+        <h3 class="fw-bold text-dark my-1">{{ verified_tech_count }}</h3>
+        <span class="text-success small">Background Verified</span>
+      </div>
+    </div>
+    <div class="col-md-3 col-6">
+      <div class="card aura-card p-3 border-start border-4 border-warning">
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="text-muted small fw-semibold">Active Customers</span>
+          <i class="bi bi-people text-warning fs-5"></i>
+        </div>
+        <h3 class="fw-bold text-dark my-1">{{ customer_count }}</h3>
+        <span class="text-muted small">Registered households</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav Tabs for Operations -->
+  <ul class="nav nav-pills mb-4" id="adminTabs" role="tablist">
+    <li class="nav-item">
+      <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-bookings">
+        <i class="bi bi-list-task me-1"></i> Live Dispatch & Bookings ({{ bookings|length }})
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-technicians">
+        <i class="bi bi-person-check me-1"></i> Technician Verification ({{ technicians|length }})
+      </button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-disputes">
+        <i class="bi bi-shield-exclamation me-1"></i> Dispute & Mediation ({{ disputes|length }})
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="adminTabsContent">
+
+    <!-- 1. LIVE BOOKINGS TAB -->
+    <div class="tab-pane fade show active" id="tab-bookings">
+      <div class="card aura-card p-4 border">
+        <h5 class="fw-bold mb-3">Live Dispatch & Repair Pipeline</h5>
+        <div class="table-responsive small">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Booking Code</th>
+                <th>Customer</th>
+                <th>Appliance</th>
+                <th>Assigned Specialist</th>
+                <th>Date & Slot</th>
+                <th>Status</th>
+                <th>Quote Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for b in bookings %}
+              <tr>
+                <td><strong>{{ b.booking_code }}</strong></td>
+                <td>
+                  <div>{{ b.customer_name }}</div>
+                  <span class="text-muted">{{ b.customer_phone }}</span>
+                </td>
+                <td>
+                  <span class="fw-semibold">{{ b.appliance_type }}</span>
+                  <div class="text-muted">{{ b.brand_model }}</div>
+                </td>
+                <td>
+                  {% if b.tech_name %}
+                    <span class="badge bg-light text-dark border">{{ b.tech_name }}</span>
+                  {% else %}
+                    <span class="badge bg-secondary">Unassigned</span>
+                  {% endif %}
+                </td>
+                <td>{{ b.preferred_date }}<br><span class="text-muted">{{ b.time_slot }}</span></td>
+                <td>
+                  <span class="badge badge-status-{{ b.status }} text-uppercase">{{ b.status.replace('_', ' ') }}</span>
+                </td>
+                <td>
+                  {% if b.quote_amount %}
+                    <strong class="text-dark">₹{{ "%.2f"|format(b.quote_amount) }}</strong>
+                    <div class="text-muted small">({{ b.quote_status }})</div>
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. TECHNICIAN VERIFICATION TAB -->
+    <div class="tab-pane fade" id="tab-technicians">
+      <div class="card aura-card p-4 border">
+        <h5 class="fw-bold mb-3">Technician Profiles & Credential Verification</h5>
+        <div class="table-responsive small">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Technician Name</th>
+                <th>Specialties</th>
+                <th>Experience</th>
+                <th>Locality</th>
+                <th>Jobs Done</th>
+                <th>Rating</th>
+                <th>Verification Status</th>
+                <th class="text-end">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in technicians %}
+              <tr>
+                <td>
+                  <strong>{{ t.full_name }}</strong>
+                  <div class="text-muted">{{ t.email }}</div>
+                </td>
+                <td>{{ t.specialties }}</td>
+                <td>{{ t.experience_years }} Years</td>
+                <td>{{ t.locality }}</td>
+                <td>{{ t.jobs_completed }}</td>
+                <td><span class="text-warning">★</span> {{ t.rating }}</td>
+                <td>
+                  {% if t.verified == 1 %}
+                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Verified</span>
+                  {% else %}
+                    <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i> Unverified</span>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  <form action="{{ url_for('verify_technician', tech_id=t.id) }}" method="POST" class="d-inline">
+                    {% if t.verified == 1 %}
+                      <input type="hidden" name="action" value="revoke">
+                      <button type="submit" class="btn btn-outline-danger btn-sm">Revoke</button>
+                    {% else %}
+                      <input type="hidden" name="action" value="approve">
+                      <button type="submit" class="btn btn-success btn-sm">Approve Pro</button>
+                    {% endif %}
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. DISPUTES & MEDIATION TAB -->
+    <div class="tab-pane fade" id="tab-disputes">
+      <div class="card aura-card p-4 border">
+        <h5 class="fw-bold mb-3">Customer Disputes & Mediation Panel</h5>
+        {% if disputes %}
+          <div class="table-responsive small">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Booking</th>
+                  <th>Customer</th>
+                  <th>Reason</th>
+                  <th>Description</th>
+                  <th>Status</th>
+                  <th class="text-end">Resolution</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for d in disputes %}
+                <tr>
+                  <td><strong>{{ d.booking_code }}</strong></td>
+                  <td>{{ d.customer_name }}</td>
+                  <td><span class="badge bg-danger bg-opacity-10 text-danger">{{ d.reason }}</span></td>
+                  <td>{{ d.description }}</td>
+                  <td>
+                    {% if d.status == 'open' %}
+                      <span class="badge bg-warning text-dark">Open</span>
+                    {% else %}
+                      <span class="badge bg-success">Resolved</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">
+                    {% if d.status == 'open' %}
+                    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#resolveModal{{ d.id }}">
+                      Resolve
+                    </button>
+                    {% else %}
+                      <span class="text-muted">Settled (₹{{ d.resolution_amount }})</span>
+                    {% endif %}
+                  </td>
+                </tr>
+
+                <!-- Resolve Modal -->
+                <div class="modal fade" id="resolveModal{{ d.id }}" tabindex="-1">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <form action="{{ url_for('resolve_dispute', dispute_id=d.id) }}" method="POST">
+                        <div class="modal-header">
+                          <h5 class="modal-title fw-bold">Resolve Dispute for {{ d.booking_code }}</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                          <div class="mb-3">
+                            <label class="form-label small fw-semibold">Refund / Compensation Amount (₹)</label>
+                            <input type="number" step="0.01" name="resolution_amount" class="form-control" value="0.00">
+                          </div>
+                          <div class="mb-3">
+                            <label class="form-label small fw-semibold">Resolution Notes</label>
+                            <textarea name="admin_notes" class="form-control" rows="3" required>Customer and technician aligned on revised quote adjustments.</textarea>
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                          <button type="submit" class="btn btn-success btn-sm">Close & Resolve Dispute</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="text-muted small">No active disputes reported. Platform satisfaction rating: 99.4%.</p>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

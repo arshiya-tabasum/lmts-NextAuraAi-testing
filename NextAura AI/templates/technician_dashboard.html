@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Technician Console — NextAura AI{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- Header Banner -->
+  <div class="card aura-card p-4 mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff;">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span class="badge bg-primary">Technician Operations Console</span>
+          {% if tech.verified == 1 %}
+            <span class="badge bg-success"><i class="bi bi-patch-check-fill me-1"></i> Verified Pro</span>
+          {% else %}
+            <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i> Pending Verification</span>
+          {% endif %}
+        </div>
+        <h2 class="fw-bold mb-1">{{ current_user.name }}</h2>
+        <div class="text-secondary small">
+          Specialties: <span class="text-light">{{ tech.specialties }}</span> • Base Locality: <span class="text-light">{{ tech.locality }}</span>
+        </div>
+      </div>
+      <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <div class="d-inline-flex gap-3 bg-dark bg-opacity-50 p-3 rounded-3 border border-secondary border-opacity-50">
+          <div class="text-center">
+            <span class="small text-secondary d-block">Rating</span>
+            <span class="fs-4 fw-bold text-warning">★ {{ tech.rating }}</span>
+          </div>
+          <div class="vr bg-secondary"></div>
+          <div class="text-center">
+            <span class="small text-secondary d-block">Completed</span>
+            <span class="fs-4 fw-bold text-light">{{ completed_count }}</span>
+          </div>
+          <div class="vr bg-secondary"></div>
+          <div class="text-center">
+            <span class="small text-secondary d-block">Earnings</span>
+            <span class="fs-4 fw-bold text-success">₹{{ "%.0f"|format(total_earnings) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Job Requests Section -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="fw-bold mb-0 text-dark"><i class="bi bi-inbox text-primary me-2"></i>Assigned Repair Queue</h4>
+    <span class="badge bg-light text-dark border">{{ jobs|length }} Total Assigned</span>
+  </div>
+
+  {% if jobs %}
+    <div class="row g-3">
+      {% for j in jobs %}
+      <div class="col-12">
+        <div class="card aura-card p-4 border">
+          <div class="row g-3 align-items-center">
+            <div class="col-md-4">
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-light text-dark border">{{ j.booking_code }}</span>
+                <span class="badge badge-status-{{ j.status }} text-uppercase">{{ j.status.replace('_', ' ') }}</span>
+              </div>
+              <h5 class="fw-bold mb-1 text-dark">{{ j.appliance_type }}</h5>
+              <div class="text-muted small mb-2">{{ j.brand_model }}</div>
+              <div class="small text-secondary">
+                <i class="bi bi-clock me-1"></i> Slot: <strong>{{ j.preferred_date }}</strong> ({{ j.time_slot }})
+              </div>
+            </div>
+
+            <div class="col-md-4 border-start-md ps-md-4">
+              <div class="small mb-1"><strong>Customer:</strong> {{ j.customer_name }} (<a href="tel:{{ j.customer_phone }}" class="text-primary">{{ j.customer_phone }}</a>)</div>
+              <div class="small text-muted mb-2"><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ j.service_address }}</div>
+              <div class="p-2 bg-light rounded small">
+                <strong>Symptoms:</strong> {{ j.symptom_description }}
+              </div>
+            </div>
+
+            <div class="col-md-4 text-md-end border-start-md ps-md-4">
+              <!-- Workflow Action Buttons based on status -->
+              {% if j.status == 'requested' %}
+                <div class="d-flex gap-2 justify-content-md-end">
+                  <form action="{{ url_for('tech_update_status', booking_id=j.id) }}" method="POST">
+                    <input type="hidden" name="status" value="declined">
+                    <button type="submit" class="btn btn-outline-danger btn-sm">Decline</button>
+                  </form>
+                  <form action="{{ url_for('tech_update_status', booking_id=j.id) }}" method="POST">
+                    <input type="hidden" name="status" value="accepted">
+                    <button type="submit" class="btn btn-primary btn-sm px-3 fw-bold">Accept Booking</button>
+                  </form>
+                </div>
+
+              {% elif j.status == 'accepted' %}
+                <form action="{{ url_for('tech_update_status', booking_id=j.id) }}" method="POST">
+                  <input type="hidden" name="status" value="inspecting">
+                  <button type="submit" class="btn btn-warning btn-sm text-dark fw-bold w-100">
+                    <i class="bi bi-geo me-1"></i> Arrived & Start Physical Inspection
+                  </button>
+                </form>
+
+              {% elif j.status == 'inspecting' %}
+                <button class="btn btn-primary btn-sm fw-bold w-100" data-bs-toggle="modal" data-bs-target="#quoteModal{{ j.id }}">
+                  <i class="bi bi-receipt me-1"></i> Submit Itemized Quote
+                </button>
+
+              {% elif j.status == 'quoted' %}
+                <div class="alert alert-warning small py-1 px-2 mb-0 text-center">
+                  <i class="bi bi-hourglass"></i> Awaiting Customer Approval (Quote: ₹{{ "%.0f"|format(j.total_amount) }})
+                </div>
+
+              {% elif j.status == 'quote_approved' %}
+                <div class="mb-2 text-success small fw-bold">
+                  <i class="bi bi-check-circle-fill"></i> Quote Approved by Customer!
+                </div>
+                <button class="btn btn-success btn-sm fw-bold w-100" data-bs-toggle="modal" data-bs-target="#completeModal{{ j.id }}">
+                  <i class="bi bi-check2-all me-1"></i> Mark Completed & Issue Passport
+                </button>
+
+              {% elif j.status == 'completed' %}
+                <span class="badge bg-success bg-opacity-10 text-success p-2">
+                  <i class="bi bi-check-circle-fill me-1"></i> Completed & Passport Issued
+                </span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- MODAL: Submit Itemized Quote -->
+        <div class="modal fade" id="quoteModal{{ j.id }}" tabindex="-1">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <form action="{{ url_for('tech_submit_quote', booking_id=j.id) }}" method="POST">
+                <div class="modal-header">
+                  <h5 class="modal-title fw-bold">Itemized Quotation for {{ j.booking_code }}</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                  <p class="small text-muted mb-3">Conduct physical inspection and provide verified transparent costs. Customer must approve before work proceeds.</p>
+
+                  <div class="mb-3">
+                    <label class="form-label small fw-semibold">Base Inspection Fee (₹)</label>
+                    <input type="number" step="0.01" name="inspection_fee" class="form-control" value="299.00" required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label small fw-semibold">Labor & Calibration Cost (₹)</label>
+                    <input type="number" step="0.01" name="labor_cost" class="form-control" value="450.00" required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label small fw-semibold">Spare Parts Cost (₹)</label>
+                    <input type="number" step="0.01" name="parts_cost" class="form-control" value="850.00" required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label small fw-semibold">Parts Description & OEM Specifications</label>
+                    <input type="text" name="parts_breakdown" class="form-control" value="OEM Heavy-duty 45uF Run Capacitor" required>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label small fw-semibold">Warranty Period (Months)</label>
+                    <select name="warranty_months" class="form-select">
+                      <option value="1">1 Month</option>
+                      <option value="3" selected>3 Months (Standard)</option>
+                      <option value="6">6 Months</option>
+                    </select>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label small fw-semibold">Inspection Findings & Diagnostic Notes</label>
+                    <textarea name="technician_notes" class="form-control" rows="2">Motor capacitor degraded. Windings tested safe. Replacement restores full cooling.</textarea>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                  <button type="submit" class="btn btn-primary btn-sm px-3 fw-bold">Submit Quote to Customer</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- MODAL: Mark Completed & Issue Passport -->
+        <div class="modal fade" id="completeModal{{ j.id }}" tabindex="-1">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <form action="{{ url_for('tech_complete_job', booking_id=j.id) }}" method="POST">
+                <div class="modal-header">
+                  <h5 class="modal-title fw-bold">Complete Repair & Issue Passport</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                  <p class="small text-muted mb-3">This will finalize the job and create the permanent <strong>Digital Repair Passport</strong> in SQLite.</p>
+
+                  <div class="mb-3">
+                    <label class="form-label small fw-semibold">Summary of Work Done</label>
+                    <textarea name="work_summary" class="form-control" rows="2" required>Replaced capacitor, cleaned indoor filter, verified refrigerant pressure and 16°C grill drop temperature.</textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label small fw-semibold">Parts Replaced</label>
+                    <input type="text" name="parts_replaced" class="form-control" value="45uF OEM Motor Run Capacitor" required>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                  <button type="submit" class="btn btn-success btn-sm px-4 fw-bold">Certify & Issue Passport</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card p-5 text-center bg-white border">
+      <i class="bi bi-check2-circle text-success fs-1 mb-2"></i>
+      <h5>All Caught Up!</h5>
+      <p class="text-secondary small mb-0">No pending jobs in your queue right now. You will be notified when new requests match your skills.</p>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

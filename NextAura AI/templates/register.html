@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up — NextAura AI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card aura-card p-4 p-md-5 border">
+        <h3 class="fw-bold mb-1 text-dark">Create Your Account</h3>
+        <p class="text-secondary small mb-4">Join NextAura AI as a homeowner or verified service specialist.</p>
+
+        <form action="{{ url_for('register') }}" method="POST">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Full Name</label>
+              <input type="text" name="full_name" class="form-control" placeholder="e.g. John Doe" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Phone Number</label>
+              <input type="text" name="phone" class="form-control" placeholder="+91 98765 43210" required>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Email Address</label>
+              <input type="email" name="email" class="form-control" placeholder="name@domain.com" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Password</label>
+              <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Role</label>
+              <select name="role" id="registerRoleSelect" class="form-select" onchange="toggleTechFields()">
+                <option value="customer" selected>Customer (Household)</option>
+                <option value="technician">Appliance Technician</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Locality</label>
+              <select name="locality" class="form-select">
+                <option value="Indiranagar">Indiranagar, Bengaluru</option>
+                <option value="Koramangala">Koramangala, Bengaluru</option>
+                <option value="HSR Layout">HSR Layout, Bengaluru</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-3" id="techSpecialtiesDiv" style="display: none;">
+            <label class="form-label small fw-semibold">Specialty Appliances</label>
+            <input type="text" name="specialties" class="form-control" placeholder="e.g. Air Conditioners, Refrigerators, Washing Machines">
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label small fw-semibold">Service Address</label>
+            <input type="text" name="address" class="form-control" placeholder="House/Flat No., Apartment name, Landmark">
+          </div>
+
+          <div class="d-grid mb-3">
+            <button type="submit" class="btn btn-primary py-2 fw-semibold">Create Account</button>
+          </div>
+        </form>
+
+        <div class="text-center small text-muted">
+          Already registered? <a href="{{ url_for('login') }}" class="text-primary fw-semibold">Log in here</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+function toggleTechFields() {
+  const role = document.getElementById("registerRoleSelect").value;
+  const div = document.getElementById("techSpecialtiesDiv");
+  div.style.display = (role === "technician") ? "block" : "none";
+}
+</script>
+{% endblock %}

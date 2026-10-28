@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Appliance Repair & Budget Hub — NextAura AI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <div class="text-center max-w-700 mx-auto mb-5">
+    <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-white border shadow-sm mb-2">
+      <span class="badge bg-primary">Financial Transparency</span>
+      <span class="small text-muted">Smart Home Maintenance Budgeting</span>
+    </div>
+    <h2 class="display-6 fw-bold text-dark">Appliance Repair & Budget Planner</h2>
+    <p class="text-secondary">Make informed decisions between repairing vs replacing appliances. Calculate expected annual costs and avoid unexpected household repair shocks.</p>
+  </div>
+
+  <div class="row g-4 mb-5">
+    <!-- Interactive Repair vs Replace Calculator -->
+    <div class="col-lg-7">
+      <div class="card aura-card p-4 p-md-5 h-100 border">
+        <h4 class="fw-bold text-dark mb-1"><i class="bi bi-calculator-fill text-primary me-2"></i>"Repair vs. Replace" 50% Rule Calculator</h4>
+        <p class="small text-secondary mb-4">The golden engineering rule: If repair cost is less than 50% of a new appliance and the appliance is under 8 years old, repair is financially optimal.</p>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Target Appliance</label>
+            <select id="calcAppliance" class="form-select" onchange="runBudgetCalc()">
+              <option value="ac">Air Conditioner (1.5 Ton Inverter)</option>
+              <option value="fridge">Refrigerator (Double Door)</option>
+              <option value="washer">Washing Machine (Front Load)</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Appliance Age (Years)</label>
+            <input type="number" id="calcAge" class="form-control" value="4" min="1" max="15" oninput="runBudgetCalc()">
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Estimated Repair Cost (₹)</label>
+            <input type="number" id="calcRepairCost" class="form-control" value="2200" oninput="runBudgetCalc()">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Cost of Brand New Equivalent (₹)</label>
+            <input type="number" id="calcNewCost" class="form-control" value="38000" oninput="runBudgetCalc()">
+          </div>
+        </div>
+
+        <!-- Result Box -->
+        <div id="calcResultBox" class="p-4 rounded-3 border bg-light">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="text-muted small fw-semibold text-uppercase">Economic Verdict:</span>
+            <span id="calcBadge" class="badge bg-success fs-6">Strongly Recommend Repair</span>
+          </div>
+          <h4 id="calcSummary" class="fw-bold text-success mb-2">Repair Saves You ₹35,800</h4>
+          <p id="calcDetails" class="small text-secondary mb-0">
+            Repair cost represents only 5.8% of buying new. With an appliance age of 4 years, quality repair gives you at least 3-4 more years of reliable operation.
+          </p>
+        </div>
+
+        <div class="mt-4 pt-3 border-top text-end">
+          <a href="{{ url_for('diagnose_page') }}" class="btn btn-primary px-4 fw-bold">
+            <i class="bi bi-robot me-1"></i> Diagnose Issue with AI Doctor
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Annual Household Maintenance Guide -->
+    <div class="col-lg-5">
+      <div class="card aura-card p-4 h-100 border bg-white">
+        <h5 class="fw-bold text-dark mb-3"><i class="bi bi-piggy-bank text-success me-2"></i>Indicative Annual Budget Guide</h5>
+        <p class="small text-secondary mb-3">Typical annual preventive maintenance & wear-and-tear budget for standard Indian urban households:</p>
+
+        <div class="list-group list-group-flush small mb-4">
+          <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+            <div>
+              <strong class="text-dark">Air Conditioner</strong>
+              <div class="text-muted">2x Deep Jet washes + capacitor check</div>
+            </div>
+            <span class="badge bg-primary bg-opacity-10 text-primary">₹1,200 - ₹2,400 / yr</span>
+          </div>
+          <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+            <div>
+              <strong class="text-dark">Refrigerator</strong>
+              <div class="text-muted">Coil de-dusting, door gasket check</div>
+            </div>
+            <span class="badge bg-info bg-opacity-10 text-info">₹600 - ₹1,200 / yr</span>
+          </div>
+          <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+            <div>
+              <strong class="text-dark">Washing Machine</strong>
+              <div class="text-muted">Scale clean, inlet filter, drum balance</div>
+            </div>
+            <span class="badge bg-success bg-opacity-10 text-success">₹800 - ₹1,600 / yr</span>
+          </div>
+        </div>
+
+        <div class="p-3 bg-primary bg-opacity-10 rounded-3 border border-primary border-opacity-25 small">
+          <div class="fw-bold text-primary mb-1"><i class="bi bi-shield-check"></i> NextAura Transparency Guarantee</div>
+          <span class="text-secondary">
+            Every technician quotation on NextAura AI is locked before work begins. No surprises or inflated spare parts fees.
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transparent Indicative Spare Parts Catalog Matrix -->
+  <div class="card aura-card p-4 p-md-5 border">
+    <h4 class="fw-bold text-dark mb-2">Standard Parts & Labor Indicative Price Index (Bengaluru)</h4>
+    <p class="small text-secondary mb-4">Reference benchmarks used by the AI Appliance Doctor to safeguard customer budgets:</p>
+
+    <div class="table-responsive small">
+      <table class="table table-hover table-bordered align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Appliance</th>
+            <th>Common Component / Service</th>
+            <th>Typical Labor Cost</th>
+            <th>Indicative Spare Part Cost</th>
+            <th>Expected Warranty</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="3" class="fw-bold text-primary">Air Conditioner</td>
+            <td>Run / Start Capacitor Replacement</td>
+            <td>₹450</td>
+            <td>₹650 - ₹950</td>
+            <td>90 Days</td>
+          </tr>
+          <tr>
+            <td>Indoor Jet Pump Chemical Deep Wash</td>
+            <td>₹550 - ₹750</td>
+            <td>₹0 (Consumables included)</td>
+            <td>30 Days</td>
+          </tr>
+          <tr>
+            <td>Drain Pipe / Siphon Blockage Clearing</td>
+            <td>₹350 - ₹450</td>
+            <td>₹100 - ₹200</td>
+            <td>30 Days</td>
+          </tr>
+
+          <tr>
+            <td rowspan="3" class="fw-bold text-info">Refrigerator</td>
+            <td>PTC Starter Relay & Overload Protector</td>
+            <td>₹450</td>
+            <td>₹450 - ₹850</td>
+            <td>90 Days</td>
+          </tr>
+          <tr>
+            <td>Defrost Timer & Bi-metal Thermostat</td>
+            <td>₹450 - ₹600</td>
+            <td>₹650 - ₹1,200</td>
+            <td>90 Days</td>
+          </tr>
+          <tr>
+            <td>Magnetic Door Gasket Seal Replacement</td>
+            <td>₹350</td>
+            <td>₹600 - ₹950</td>
+            <td>60 Days</td>
+          </tr>
+
+          <tr>
+            <td rowspan="3" class="fw-bold text-success">Washing Machine</td>
+            <td>Drain Pump Motor Assembly (Front/Top Load)</td>
+            <td>₹450 - ₹550</td>
+            <td>₹850 - ₹1,450</td>
+            <td>90 Days</td>
+          </tr>
+          <tr>
+            <td>Inlet Solenoid Water Valve</td>
+            <td>₹350 - ₹450</td>
+            <td>₹450 - ₹850</td>
+            <td>90 Days</td>
+          </tr>
+          <tr>
+            <td>Door Interlock Safety Switch</td>
+            <td>₹400</td>
+            <td>₹450 - ₹750</td>
+            <td>90 Days</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+function runBudgetCalc() {
+  const age = parseFloat(document.getElementById("calcAge").value) || 0;
+  const repairCost = parseFloat(document.getElementById("calcRepairCost").value) || 0;
+  const newCost = parseFloat(document.getElementById("calcNewCost").value) || 1;
+
+  const ratio = (repairCost / newCost) * 100;
+  const savings = newCost - repairCost;
+
+  const badge = document.getElementById("calcBadge");
+  const summary = document.getElementById("calcSummary");
+  const details = document.getElementById("calcDetails");
+
+  if (age >= 10 || ratio > 50) {
+    badge.className = "badge bg-danger fs-6";
+    badge.innerText = "Consider Replacement";
+    summary.className = "fw-bold text-danger mb-2";
+    summary.innerText = "Appliance is past expected economic lifespan";
+    details.innerText = `Repair cost is ${ratio.toFixed(1)}% of new price. Over 10 years old, ongoing component wear will lead to repeated breakdowns.`;
+  } else if (ratio > 35) {
+    badge.className = "badge bg-warning text-dark fs-6";
+    badge.innerText = "Evaluate Condition with Tech";
+    summary.className = "fw-bold text-warning mb-2";
+    summary.innerText = `Repair Saves ₹${savings.toLocaleString('en-IN')}`;
+    details.innerText = `Repair represents ${ratio.toFixed(1)}% of new cost. Have a technician inspect motor & board health before approving.`;
+  } else {
+    badge.className = "badge bg-success fs-6";
+    badge.innerText = "Strongly Recommend Repair";
+    summary.className = "fw-bold text-success mb-2";
+    summary.innerText = `Repair Saves You ₹${savings.toLocaleString('en-IN')}`;
+    details.innerText = `Repair cost represents only ${ratio.toFixed(1)}% of buying new. With an age of ${age} years, certified repair gives you several more years of reliable service.`;
+  }
+}
+</script>
+{% endblock %}

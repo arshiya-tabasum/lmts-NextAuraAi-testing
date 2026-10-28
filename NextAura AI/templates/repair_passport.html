@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Digital Repair Passport — {{ p.passport_code }} — NextAura AI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <div class="d-flex justify-content-between align-items-center max-w-820 mx-auto mb-3">
+    <a href="{{ url_for('customer_dashboard') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+    </a>
+    <button onclick="window.print()" class="btn btn-dark btn-sm">
+      <i class="bi bi-printer me-1"></i> Print / Save as PDF
+    </button>
+  </div>
+
+  <div class="passport-container">
+    <!-- Passport Header -->
+    <div class="passport-header">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <i class="bi bi-cpu fs-3 text-info"></i>
+          <span class="fs-4 fw-bold">NextAura AI</span>
+        </div>
+        <div class="small text-secondary text-uppercase tracking-wider">Official Digital Repair Passport</div>
+        <div class="fs-5 fw-bold text-light mt-1">{{ p.passport_code }}</div>
+      </div>
+      <div class="passport-seal">
+        <span>Verified<br>Warranty<br>Cert</span>
+      </div>
+    </div>
+
+    <!-- Passport Body -->
+    <div class="p-4 p-md-5">
+      <div class="row g-4 mb-4 pb-4 border-bottom">
+        <div class="col-md-6">
+          <h6 class="text-muted small text-uppercase fw-bold mb-1">Appliance Identification</h6>
+          <h4 class="fw-bold text-dark mb-1">{{ p.appliance_type }}</h4>
+          <p class="text-secondary small mb-2">{{ p.brand_model }}</p>
+          <div class="badge bg-light text-dark border">Booking Reference: {{ p.booking_code }}</div>
+        </div>
+        <div class="col-md-6 border-start-md ps-md-4">
+          <h6 class="text-muted small text-uppercase fw-bold mb-1">Warranty & Guarantee</h6>
+          <div class="fs-5 fw-bold text-success mb-1">{{ p.warranty_period }}</div>
+          <div class="small text-secondary mb-2">Valid Until: <strong class="text-danger">{{ p.warranty_expiry_date }}</strong></div>
+          <span class="badge bg-success bg-opacity-10 text-success"><i class="bi bi-shield-lock-fill me-1"></i> Tamper-proof SQLite Record</span>
+        </div>
+      </div>
+
+      <div class="mb-4 pb-4 border-bottom">
+        <h6 class="text-muted small text-uppercase fw-bold mb-2">Certified Diagnostic & Service Summary</h6>
+        <div class="p-3 bg-light rounded-3 small text-dark border-start border-4 border-primary mb-3">
+          <strong>Work Completed:</strong> {{ p.work_summary }}
+        </div>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <span class="text-muted small d-block">Replaced Spare Parts:</span>
+            <strong class="text-dark">{{ p.replaced_parts }}</strong>
+          </div>
+          <div class="col-md-6">
+            <span class="text-muted small d-block">Customer Satisfaction Score:</span>
+            <span class="text-warning fw-bold fs-5">★ ★ ★ ★ ★ (5/5)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mb-4 pb-4 border-bottom">
+        <div class="col-md-6">
+          <h6 class="text-muted small text-uppercase fw-bold mb-2">Registered Owner & Address</h6>
+          <div class="fw-bold text-dark">{{ p.customer_name }}</div>
+          <div class="small text-secondary">{{ p.customer_address }}</div>
+        </div>
+        <div class="col-md-6">
+          <h6 class="text-muted small text-uppercase fw-bold mb-2">Certified Lead Technician</h6>
+          <div class="fw-bold text-dark">{{ p.tech_name }}</div>
+          <div class="small text-secondary">{{ p.tech_specialties }}</div>
+          <div class="small text-muted">Phone: {{ p.tech_phone }}</div>
+        </div>
+      </div>
+
+      <!-- Financial Receipt Breakdown -->
+      <div class="p-3 bg-light rounded-3 small">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="text-muted">Total Amount Paid (Inspection + Labor + Parts + Tax):</span>
+          <span class="fs-4 fw-bold text-dark">₹{{ "%.2f"|format(p.total_paid) }}</span>
+        </div>
+        <span class="text-success small"><i class="bi bi-check-all"></i> Digitally Invoiced & Paid with 100% Pre-Approval</span>
+      </div>
+
+      <div class="mt-4 pt-3 text-center text-muted small border-top">
+        This Repair Passport is digitally registered on the NextAura AI platform. Present this code for free warranty re-service during the validity window.
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
